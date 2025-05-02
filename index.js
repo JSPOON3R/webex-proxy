@@ -1,10 +1,8 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const path = require('path');
 const app = express();
 
-const TARGET_URL = 'https://studio-storage-proxy-9cfb4d61-cb6b-49a0-8655-66469aebae82.webfuse.com/index.html';
-
-// ✅ Middleware to set headers on every response
+// ✅ Middleware: fix CSP and iframe headers
 app.use((req, res, next) => {
   res.removeHeader('X-Frame-Options');
   res.setHeader('X-Frame-Options', 'ALLOWALL');
@@ -15,18 +13,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/', async (req, res) => {
-  try {
-    const upstreamRes = await fetch(TARGET_URL);
-    const html = await upstreamRes.text();
-    res.type('html').send(html);
-  } catch (err) {
-    console.error('Failed to fetch upstream content:', err);
-    res.status(500).send('Error loading app');
-  }
-});
+// ✅ Serve static files from /public
+app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Proxy listening on port ${PORT}`);
+  console.log(`Webex app server listening on port ${PORT}`);
 });
