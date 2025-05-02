@@ -85,6 +85,30 @@
             <td>Document referrer</td>
             <td id="referrerCell">Loading...</td>
         </tr>
+        <tr>
+            <td>document.domain</td>
+            <td id="domainCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>window.location.origin</td>
+            <td id="windowOriginCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>window.location.pathname</td>
+            <td id="pathnameCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>navigator.userAgent</td>
+            <td id="userAgentCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>window.location.search</td>
+            <td id="locationSearchCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>document.currentScript.src</td>
+            <td id="scriptSrcCell">Loading...</td>
+        </tr>
     </table>
 
     <script>
@@ -100,6 +124,13 @@
         const windowHrefCell = document.getElementById("windowHrefCell");
         const referrerCell = document.getElementById("referrerCell");
         const userAgentCell = document.getElementById("userAgentCell");
+
+        document.getElementById('domainCell').innerText = document.domain || 'N/A';
+        document.getElementById('windowOriginCell').innerText = window.location.origin;
+        document.getElementById('pathnameCell').innerText = window.location.pathname;
+        document.getElementById('userAgentCell').innerText = navigator.userAgent;
+        document.getElementById('locationSearchCell').innerText = window.location.search || 'None';
+        document.getElementById('scriptSrcCell').innerText = document.currentScript?.src || 'Unavailable';
 
         // Extended console output to page
         const originalLog = console.log;
