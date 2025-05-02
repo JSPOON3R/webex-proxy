@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/@webex/embedded-app-sdk@2.1.8/dist/iife/bundle.min.js"></script>
+
+    <title>Webfuse: Webex Embed</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Test Output</h2>
+    <table id="outputTable">
+        <tr>
+            <th>Name</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Webex Meeting ID</td>
+            <td id="meetingIdCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>Webfuse Session ID</td>
+            <td id="sessionIdCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>Console Output</td>
+            <td id="consoleErrorCell" style="max-height: 200px; overflow-y: auto;">
+                <pre>None</pre>
+            </td>
+        </tr>
+        <tr>
+            <td>Raw Context JSON</td>
+            <td id="contextJsonCell">
+                <pre>Loading...</pre>
+            </td>
+        </tr>
+        <tr>
+            <td>window.origin</td>
+            <td id="originCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>In iframe?</td>
+            <td id="iframeCheckCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>iframe src (if any)</td>
+            <td id="iframeSrcCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>Window location.href</td>
+            <td id="windowHrefCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>Document referrer</td>
+            <td id="referrerCell">Loading...</td>
+        </tr>
+    </table>
+
+    <script>
+
+        const meetingIdCell = document.getElementById("meetingIdCell");
+        const sessionIdCell = document.getElementById("sessionIdCell");
+        const consoleErrorCell = document.getElementById("consoleErrorCell").querySelector('pre');
+        const contextJsonCell = document.getElementById("contextJsonCell").querySelector('pre');
+
+        const originCell = document.getElementById("originCell");
+        const iframeCheckCell = document.getElementById("iframeCheckCell");
+        const iframeSrcCell = document.getElementById("iframeSrcCell");
+        const windowHrefCell = document.getElementById("windowHrefCell");
+        const referrerCell = document.getElementById("referrerCell");
+        const userAgentCell = document.getElementById("userAgentCell");
+
+        // Extended console output to page
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function appendToConsole(label, ...args) {
+            const message = `[${label}] ` + args.map(String).join(' | ');
+            if (consoleErrorCell.textContent === 'None') {
+                consoleErrorCell.textContent = message;
+            } else {
+                consoleErrorCell.textContent += '\n' + message;
+            }
+            consoleErrorCell.scrollTop = consoleErrorCell.scrollHeight;
+        }
+
+        console.log = (...args) => {
+            originalLog(...args);
+            appendToConsole('LOG', ...args);
+        };
+
+        console.warn = (...args) => {
+            originalWarn(...args);
+            appendToConsole('WARN', ...args);
+        };
+
+        console.error = (...args) => {
+            originalError(...args);
+            appendToConsole('ERROR', ...args);
+        };
+
+        // Diagnostics outside of SDK
+        originCell.innerText = window.origin || 'N/A';
+        iframeCheckCell.innerText = window.parent === window ? "❌ Not in iframe" : "✅ Inside iframe";
+        windowHrefCell.innerText = window.location.href;
+        referrerCell.innerText = document.referrer || 'None';
+        if (userAgentCell) {
+            userAgentCell.innerText = navigator.userAgent;
+        }
+
+        try {
+            const iframeSrc = window.frameElement?.src;
+            iframeSrcCell.innerText = iframeSrc || 'Not available';
+        } catch (err) {
+            console.warn("iframe src access failed:", err);
+            iframeSrcCell.innerText = 'Access denied (sandboxed)';
+        }
+
+        // Debug check: is the SDK object available after a short delay?
+        setTimeout(() => {
+            if (typeof WebexEmbeddedApp === 'undefined') {
+                console.error("❌ WebexEmbeddedApp is still undefined after timeout");
+            } else {
+                console.log("✅ WebexEmbeddedApp is now defined after timeout");
+            }
+        }, 3000);
+
+        console.log("Webex SDK bridge:", window.__WEBEX__);
+
+        // Webex SDK init
+        if (!window.WebexEmbeddedApp) {
+            console.error("WebexEmbeddedApp SDK is not available.");
+        } else {
+            console.log("Webex SDK bridge:", window.__WEBEX__);
+            WebexEmbeddedApp.ready().then(() => {
+                console.log("✅ SDK Ready");
+
+                WebexEmbeddedApp.getContext().then(context => {
+                    console.log("✅ Context received:", context);
+                    const meetingId = context.meetingId || context.spaceId;
+                    meetingIdCell.innerText = meetingId || 'N/A';
+                    sessionIdCell.innerText = `session-${meetingId?.slice(-6) || 'unknown'}`;
+                    contextJsonCell.textContent = JSON.stringify(context, null, 2);
+                }).catch(err => {
+                    console.error("❌ Error getting context:", err);
+                    meetingIdCell.innerText = 'Error loading context';
+                });
+
+            }).catch(err => {
+                console.error("❌ SDK failed to initialize:", err);
+                meetingIdCell.innerText = 'SDK init failed';
+            });
+        }
+    </script>
+</body>
+
+</html>
