@@ -39,7 +39,7 @@
 </head>
 
 <body>
-    <h2>Test Output</h2>
+    <h2>Test Output v2</h2>
     <table id="outputTable">
         <tr>
             <th>Name</th>
@@ -109,10 +109,30 @@
             <td>document.currentScript.src</td>
             <td id="scriptSrcCell">Loading...</td>
         </tr>
+        <tr>
+            <td>Is Top Window?</td>
+            <td id="isTopWindowCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>window.parent === window</td>
+            <td id="isParentEqualCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>Webex SDK Bridge (__WEBEX__)</td>
+            <td id="sdkBridgeCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>iframe sandbox attributes</td>
+            <td id="sandboxAttrCell">Loading...</td>
+        </tr>
+        <tr>
+            <td>SDK script tag src</td>
+            <td id="sdkScriptSrcCell">Loading...</td>
+        </tr>
+
     </table>
 
     <script>
-
         const meetingIdCell = document.getElementById("meetingIdCell");
         const sessionIdCell = document.getElementById("sessionIdCell");
         const consoleErrorCell = document.getElementById("consoleErrorCell").querySelector('pre');
@@ -214,6 +234,21 @@
                 meetingIdCell.innerText = 'SDK init failed';
             });
         }
+
+        document.getElementById('isTopWindowCell').innerText = window === window.top ? "✅ Yes" : "❌ No";
+        document.getElementById('isParentEqualCell').innerText = window.parent === window ? "✅ Yes" : "❌ No";
+        document.getElementById('sdkBridgeCell').innerText = typeof window.__WEBEX__ !== "undefined" ? "✅ Present" : "❌ Not injected";
+
+        try {
+            const frameEl = window.frameElement;
+            document.getElementById('sandboxAttrCell').innerText = frameEl ? frameEl.getAttribute('sandbox') || "None" : "❌ No frameElement";
+        } catch (e) {
+            document.getElementById('sandboxAttrCell').innerText = "❌ Access failed";
+        }
+
+        const sdkScript = [...document.scripts].find(s => s.src && s.src.includes("webex/embedded-app-sdk"));
+        document.getElementById('sdkScriptSrcCell').innerText = sdkScript?.src || "❌ Not found";
+
     </script>
 </body>
 
